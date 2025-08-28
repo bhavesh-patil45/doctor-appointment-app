@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="container">
     <h2>Book Appointment</h2>
     <div class="page-header">
-        <img src="assets/images/booking.jpg" alt="Book Appointment" style="max-width:100%; border-radius:10px;">
+        <img src="assets/images/booking.jpg" alt="Book Appointment">
     </div>
 
     <?php if (!empty($success))

@@ -95,14 +95,9 @@ button:hover {
 }
 
 .page-header img {
-    width: 100%;
-    /* max-height: 250px; */
-    /* Prevents too-tall images */
-    height: 250px;
-    /* Maintains aspect ratio */
-    object-fit: cover;
-    /* Crops edges if needed */
-    border-radius: 10px;
-    /* Rounded corners */
-    margin-bottom: 20px;
+    width: 100% !important;
+    height: 250px !important;
+    object-fit: cover !important;
+    border-radius: 10px !important;
+    margin-bottom: 20px !important;
 }

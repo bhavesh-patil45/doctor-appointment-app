@@ -12,8 +12,18 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'doctor')
 include 'db.php';
 
 $doctor_id = (int) $_SESSION['user_id'];
-$success = '';
 $error = '';
+
+// ✅ Check if doctor exists in users table
+$checkDoctor = $conn->prepare("SELECT id FROM users WHERE id = ? AND role = 'doctor'");
+$checkDoctor->bind_param("i", $doctor_id);
+$checkDoctor->execute();
+$checkDoctor->store_result();
+
+if ($checkDoctor->num_rows === 0) {
+    die("Error: Doctor record not found in database. Please contact admin.");
+}
+$checkDoctor->close();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $date = trim($_POST['available_date'] ?? '');
@@ -30,9 +40,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif (!$tobj || $tobj->format('H:i') !== $time) {
             $error = 'Invalid time format.';
         } else {
-            // Step 1: Check for duplicate slot
+            // ✅ Check for duplicate slot
             $check = $conn->prepare("
-                SELECT id FROM availability 
+                SELECT id FROM doctor_availability 
                 WHERE doctor_id = ? AND available_date = ? AND available_time = ?
             ");
             $check->bind_param("iss", $doctor_id, $date, $time);
@@ -42,15 +52,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($result->num_rows > 0) {
                 $error = "You already have this time slot available.";
             } else {
-                // Step 2: Insert availability
+                // ✅ Insert into doctor_availability
                 $stmt = $conn->prepare("
-                    INSERT INTO availability (doctor_id, available_date, available_time) 
+                    INSERT INTO doctor_availability (doctor_id, available_date, available_time) 
                     VALUES (?, ?, ?)
                 ");
                 if ($stmt) {
                     $stmt->bind_param("iss", $doctor_id, $date, $time);
                     if ($stmt->execute()) {
-                        $success = "Availability added for $date at $time.";
+                        // Redirect to dashboard with success message
+                        header("Location: dashboard.php?success=" . urlencode("Availability added for $date at $time."));
+                        exit();
                     } else {
                         $error = 'Database error: ' . $stmt->error;
                     }
@@ -74,15 +86,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <body>
     <div class="page-header">
-        <img src="assets/images/booking.jpg" alt="Add Availability" style="max-width:100%; border-radius:10px;">
+        <img src="assets/images/booking.jpg" alt="Add Availability">
     </div>
 
     <div class="container">
         <h2>Add Availability</h2>
-
-        <?php if ($success): ?>
-            <p class="success"><?= htmlspecialchars($success) ?></p>
-        <?php endif; ?>
 
         <?php if ($error): ?>
             <p class="error"><?= htmlspecialchars($error) ?></p>
